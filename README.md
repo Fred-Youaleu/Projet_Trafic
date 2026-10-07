@@ -1,4 +1,4 @@
-# 🚦 Projet Trafic Paris - Jalon M1
+#  Projet Trafic Paris - Jalon M1
 
 ##  Description
 Ce dépôt contient l'Analyse Exploratoire des Données (EDA) réalisée dans le cadre du Jalon M1. L'objectif est d'identifier et de valider le potentiel de 3 axes pilotes pour des aménagements de voirie.
@@ -14,5 +14,5 @@ La stratégie repose sur une combinaison d'un axe structurant et de deux "quick 
 - `*.png` : Images des graphiques générés (débit, occupation, évolution horaire).
 - `data/` : Dossier contenant les données brutes (ignoré par Git via `.gitignore` pour des raisons de poids).
 
-## 👤 Auteur
+##  Auteur
 Fred Youaleu
