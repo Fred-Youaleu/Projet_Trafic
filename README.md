@@ -23,16 +23,16 @@ La ville de Paris dispose de centaines de capteurs de trafic permanents qui mesu
 | Caracteristique | Detail |
 |-----------------|--------|
 | **Source** | OpenData Paris - Comptages routiers permanents |
-| **Periode** | Donnees horaires sur plusieurs mois (2026) |
-| **Volume** | 69 824 mesures |
+| **Periode** | Donnees horaires sur plusieurs mois |
+| **Volume** | ~69 824 mesures (apres filtrage) |
 | **Variables cles** | `q` (debit veh/h), `k` (occupation %), `etat_trafic`, `etat_barre`, `t_1h` (heure Paris) |
-| **Capteurs** | 16 capteurs repartis sur les 3 axes |
+| **Capteurs** | 15 capteurs uniques retenus sur les 3 axes (apres deduplication) |
 
 ---
 
 ## Methodologie
 
-Le projet s'est deroule en **4 etapes** successives, chacune correspondant a un notebook dedie :
+Le projet s'est deroule en etapes successives, chacune correspondant a un notebook dedie :
 
 ### Jalon M1 - Chargement et Premiere Exploration (`projet_Trafic.ipynb`)
 - Chargement du CSV brut et identification des colonnes.
@@ -41,23 +41,23 @@ Le projet s'est deroule en **4 etapes** successives, chacune correspondant a un 
 
 ### Jalon M2 - Nettoyage et Preparation (`Rendu 2.ipynb`)
 - **Formatage des types** : `t_1h` en datetime (fuseau Paris), etats en categorie.
-- **Verification des doublons** : detection de capteurs redondants (ex: capteurs 69 et 70 du Quai Conti).
+- **Deduplication** : Exclusion du capteur 70 du Quai Conti, dont les mesures etaient strictement identiques a celles du capteur 69, afin d'eviter tout double comptage dans les agregations.
 - **Traitement des valeurs manquantes** :
-  - Identification des etats "Inconnu"/"Invalide" comme incertitudes de classification.
-  - Interpolation lineaire pour les trous courts (<= 3h, soit 99.4% des cas).
-  - Conservation des NaN pour les trous longs (> 3h) pour eviter les biais.
-- **Limites physiques** : plafonnement de `k` entre 0 et 100%, gestion des debits > 2000 veh/h.
+  - Identification des etats "Inconnu"/"Invalide" comme incertitudes de classification ou defauts de mesure.
+  - Interpolation lineaire **par tronçon (`iu_ac`)** pour les trous courts (<= 3h, soit 99.4% des cas), preservant la dynamique propre a chaque capteur.
+  - Conservation des NaN pour les trous longs (> 3h) pour eviter l'invention de donnees (biais artificiel).
+- **Limites physiques** : plafonnement de `k` entre 0 et 100%, gestion des debits negatifs.
 
 ### Jalon M3 - Analyse Exploratoire (`Rendu 3.ipynb`)
 - **Variables temporelles** : extraction de l'heure, jour de semaine, indicateur week-end.
 - **Encodage** :
   - `etat_trafic` -> encodage ordinal (Fluide=0, Pre-sature=1, Sature=2, Bloque=3) apres validation de l'ordre par la mediane de `k`.
-  - `etat_barre` et `libelle` -> one-hot encoding.
-- **Valeurs aberrantes** : comparaison IQR vs limites physiques -> decision de garder les valeurs physiquement plausibles.
-- **Statistiques descriptives** par troncon avec interpretation metier.
+  - `etat_barre` -> one-hot encoding.
+- **Valeurs aberrantes** : comparaison IQR vs limites physiques -> decision de conserver les valeurs physiquement plausibles (pics de trafic reels).
+- **Statistiques descriptives** : calcul des indicateurs **par tronçon (`iu_ac`)** et focalisation sur les **heures de pointe** (8h-10h et 17h-19h).
 
-### Rendu Final  - Visualisations Strategiques (`Rendu Final 4.ipynb`)
-- **Profil horaire** : comparaison Semaine vs Week-end pour mettre en evidence l'impact du mode de vie sur le trafic.
+### Rendu Final - Visualisations Strategiques
+- **Profil horaire** : comparaison Semaine vs Week-end.
 - **Heatmap de la congestion** : cartographie visuelle des periodes de tension maximale (jour x heure).
 - **Diagramme Fondamental** : relation physique entre debit et occupation, avec trajectoire des medianes par etat de trafic.
 - **Analyse des seuils de basculement** : determination des taux d'occupation critiques pour chaque etat et chaque axe.
@@ -82,16 +82,15 @@ Le taux d'occupation (`k`) montre egalement des valeurs incoherentes (superieure
 Meme sur les donnees brutes, une cyclicite journaliere est deja visible, confirmant la pertinence d'une analyse temporelle approfondie.
 
 ### Phase 2 : Distributions apres nettoyage (Jalon M2 / M3)
-Apres l'application des regles de nettoyage (interpolation, plafonnement de `k`, suppression des valeurs physiquement impossibles), les distributions sont assainies.
+Apres l'application des regles de nettoyage, les distributions sont assainies et exploitables.
 
 **4. Distribution du debit et de l'occupation par axe**
 ![Distribution finale](images/distribution_debit_occupation.png)
 - **Bd Richard Lenoir** : mediane ~204 veh/h, max 828 veh/h - axe a fort volume mais stable.
-- **Quai Conti** : mediane ~1032 veh/h, max 1563 veh/h - trafic dense avec pics marques.
+- **Quai Conti** : mediane ~1032 veh/h, max 1563 veh/h - trafic dense avec pics marques (capteur 69 unique retenu).
 - **Sts Peres** : mediane ~240 veh/h, max 1001 veh/h - variabilite importante.
 
-### Phase 3 : Dynamiques temporelles et congestion (Rendu Final)
-
+### Phase 3 : Dynamiques temporelles et congestion
 **5. Profil horaire : Semaine vs Week-end**
 ![Profil horaire](images/profil_horaire_semaine_weekend.png)
 - **Effet week-end** : les pics de 9h et 18h disparaissent totalement le samedi et dimanche, confirmant un trafic a **dominante professionnelle**.
@@ -101,14 +100,10 @@ Apres l'application des regles de nettoyage (interpolation, plafonnement de `k`,
 ![Heatmap](images/heatmap_congestion.png)
 La congestion (taux d'occupation `k`) est maximale **du lundi au vendredi, entre 8h-10h et 17h-19h**. Le week-end, la carte s'eclaircit drastiquement, validant l'absence de saturation structurelle hors jours ouvres.
 
-### Phase 4 : Physique du trafic et seuils (Rendu Final)
-
+### Phase 4 : Physique du trafic et seuils
 **7. Diagramme Fondamental : Debit vs Occupation**
 ![Diagramme fondamental](images/diagramme_fondamental.png)
-La trajectoire des medianes (ligne noire) revele la physique du trafic :
-- De *Fluide* a *Pre-sature* : le debit augmente avec l'occupation.
-- A partir de *Sature* : le debit stagne puis chute malgre une occupation croissante.
-- *Bloque* : occupation tres elevee (> 50%), debit effondre.
+La trajectoire des medianes (ligne noire) revele la physique du trafic : le debit augmente avec l'occupation jusqu'a un point de capacite maximale (Pre-sature), puis s'effondre lorsque la congestion devient severe (Bloque).
 
 **8. Seuils de basculement par axe**
 ![Seuils](images/seuils_basculement.png)
@@ -118,18 +113,28 @@ La trajectoire des medianes (ligne noire) revele la physique du trafic :
 | Fluide | 1.59% | 8.47% | 4.46% |
 | Pre-sature | 17.53% | 18.04% | 20.41% |
 | Sature | 36.27% | 35.04% | 35.87% |
-| Bloque | 52.22% | **0.00%** | 55.56% |
+| Bloque | 52.22% | **NaN** | 55.56% |
 
-**Constat cle** : les seuils sont remarquablement stables d'un axe a l'autre (~17-20% pour Pre-sature, ~35-36% pour Sature), validant l'homogeneite de la physique du trafic. L'anomalie du Quai Conti (0% pour "Bloque") revele une **defaillance de l'etiquetage automatique** des capteurs.
+**Constat cle** : les seuils sont remarquablement stables d'un axe a l'autre (~17-20% pour Pre-sature, ~35-36% pour Sature), validant l'homogeneite de la physique du trafic. L'absence de valeur (`NaN`) pour l'etat "Bloque" sur le Quai Conti reflete simplement que ce niveau de congestion extreme n'a pas ete atteint sur ce troncon durant la periode analysee. Cette representation honnete des donnees evite d'interpreter a tort une absence d'occurrence comme un seuil physique de 0%.
 
 ---
 
 ## Limites
 
-- **Trous de mesure** : les etats "Inconnu" (souvent la nuit) ont ete interpolés. Les trous > 3h restent en `NaN`.
-- **Redondance de capteurs** : les capteurs 69 et 70 du Quai Conti renvoient des mesures strictement identiques (duplication probable au niveau de la collecte).
-- **Etiquetage defaillant** : certains etats declares (ex: "Bloque" avec 0% d'occupation) contredisent la realite physique -> prudence requise.
-- **Absence de typologie** : les donnees ne distinguent pas les types de vehicules (2 roues vs 4 roues).
+- **Trous de mesure** : les etats "Inconnu" (souvent la nuit) ont ete interpolés. Les trous > 3h restent en `NaN` par choix methodologique pour eviter les biais.
+- **Redondance initiale de capteurs** : les capteurs 69 et 70 du Quai Conti renvoyaient des mesures strictement identiques (duplication probable au niveau de la collecte). Le capteur 70 a ete exclu des analyses pour garantir l'integrite des agregations.
+
+
+## Utilisation de l'IA
+
+Conformément aux règles du module, l'utilisation de l'IA générative a été déclarée et encadrée comme suit :
+
+- **Outil utilisé** : Assistant IA conversationnel (LLM).
+- **À quoi cela m'a servi concrètement** :
+  1. **Détection d'erreurs logiques** : L'IA m'a aidé à réaliser que mon interpolation des valeurs manquantes était initialement faite par axe (`libelle`) au lieu de par tronçon (`iu_ac`), ce qui lissait artificiellement les données entre des capteurs aux comportements différents.
+  2. **Correction d'artefacts d'affichage** : Elle m'a permis d'identifier que le paramètre `fill_value=0` dans mon tableau des seuils de basculement masquait une absence réelle de données (l'état "Bloqué" n'ayant pas été atteint sur le Quai Conti), créant ainsi un faux seuil physique à 0,00 %.
+  3. **Structuration et relecture** : Amélioration de la clarté du code, suppression des commentaires superflus et affinage des interprétations textuelles pour garantir la rigueur scientifique.
+- **Modifications apportées** : Toutes les suggestions générées par l'IA ont été systématiquement vérifiées, validées et adaptées manuellement dans le code pour garantir la cohérence métier et l'exactitude des résultats présentés dans ce projet.
 
 ---
 
@@ -143,7 +148,11 @@ cd Projet_Trafic
 # 2. Installer les dependances
 pip install -r requirements.txt
 
-# 3. Executer les notebooks dans l'ordre chronologique :
+# 3. Telecharger les donnees (script de reproductibilite)
+python download_data.py
+
+# 4. Executer les notebooks dans l'ordre chronologique :
 #    - projet_Trafic.ipynb : Chargement et premiere exploration (M1)
 #    - Rendu 2.ipynb       : Nettoyage et preparation des donnees (M2)
-#    - Rendu 3.ipynb       : Analyse exploratoire et visualisations (M3 + Rendu Final 4)
+#    - Rendu 3.ipynb       : Analyse exploratoire et visualisations (M3)
+#    - Rendu Final 4.ipynb       : Analyse exploratoire et visualisations (M4)
