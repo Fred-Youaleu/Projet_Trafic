@@ -115,8 +115,7 @@ La trajectoire des medianes (ligne noire) revele la physique du trafic : le debi
 | Sature | 36.27% | 35.04% | 35.87% |
 | Bloque | 52.22% | **NaN** | 55.56% |
 
-**Constat cle** : les seuils sont remarquablement stables d'un axe a l'autre (~17-20% pour Pre-sature, ~35-36% pour Sature), validant l'homogeneite de la physique du trafic. L'absence de valeur (`NaN`) pour l'etat "Bloque" sur le Quai Conti reflete simplement que ce niveau de congestion extreme n'a pas ete atteint sur ce troncon durant la periode analysee. Cette representation honnete des donnees evite d'interpreter a tort une absence d'occurrence comme un seuil physique de 0%.
-
+**Constat cle** : les seuils sont remarquablement stables d'un axe a l'autre (~17-20% pour Pre-sature, ~35-36% pour Sature), validant l'homogeneite de la physique du trafic. L'absence de valeur (`NaN`) pour l'etat "Bloque" sur le Quai Conti reflete simplement que ce niveau de congestion extreme n'a pas ete atteint sur ce troncon durant la periode analysee. 
 ---
 
 ## Limites
@@ -131,9 +130,9 @@ Conformément aux règles du module, l'utilisation de l'IA générative a été 
 
 - **Outil utilisé** : Assistant IA conversationnel (LLM).
 - **À quoi cela m'a servi concrètement** :
-  1. **Détection d'erreurs logiques** : L'IA m'a aidé à réaliser que mon interpolation des valeurs manquantes était initialement faite par axe (`libelle`) au lieu de par tronçon (`iu_ac`), ce qui lissait artificiellement les données entre des capteurs aux comportements différents.
-  2. **Correction d'artefacts d'affichage** : Elle m'a permis d'identifier que le paramètre `fill_value=0` dans mon tableau des seuils de basculement masquait une absence réelle de données (l'état "Bloqué" n'ayant pas été atteint sur le Quai Conti), créant ainsi un faux seuil physique à 0,00 %.
-  3. **Structuration et relecture** : Amélioration de la clarté du code, suppression des commentaires superflus et affinage des interprétations textuelles pour garantir la rigueur scientifique.
+  1. **Structuration et relecture** : Amélioration de la clarté du code, affinage des interprétations textuelles pour garantir la rigueur scientifique.
+  2. **Gestion du versioning avec Git** : L'IA m'a accompagné dans la rédaction des commandes Git (`git add`, `git commit`, `git push`) compte tenu du fait que je ne l'avais jamais fait avant pour suivre l'évolution du projet sur GitHub.
+  
 - **Modifications apportées** : Toutes les suggestions générées par l'IA ont été systématiquement vérifiées, validées et adaptées manuellement dans le code pour garantir la cohérence métier et l'exactitude des résultats présentés dans ce projet.
 
 ---
