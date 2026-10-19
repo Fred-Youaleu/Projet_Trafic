@@ -128,12 +128,13 @@ La trajectoire des medianes (ligne noire) revele la physique du trafic : le debi
 
 Conformément aux règles du module, l'utilisation de l'IA générative a été déclarée et encadrée comme suit :
 
-- **Outil utilisé** : Assistant IA conversationnel (LLM).
-- **À quoi cela m'a servi concrètement** :
-  1. **Structuration et relecture** : Amélioration de la clarté du code, affinage des interprétations textuelles pour garantir la rigueur scientifique.
-  2. **Gestion du versioning avec Git** : L'IA m'a accompagné dans la rédaction des commandes Git (`git add`, `git commit`, `git push`) compte tenu du fait que je ne l'avais jamais fait avant pour suivre l'évolution du projet sur GitHub.
-  
-- **Modifications apportées** : Toutes les suggestions générées par l'IA ont été systématiquement vérifiées, validées et adaptées manuellement dans le code pour garantir la cohérence métier et l'exactitude des résultats présentés dans ce projet.
+- **Outil utilisé** : Perplexity (assistant IA conversationnel).
+- **Pour quelles parties** :
+  1. **Structuration et relecture** : amélioration de la clarté du code et affinage des interprétations textuelles pour garantir la rigueur scientifique.
+  2. **Gestion du versioning avec Git** : l'IA m'a accompagné dans la rédaction des commandes Git (`git add`, `git commit`, `git push`) puisque je n'en avais jamais fait avant pour suivre l'évolution du projet sur GitHub.
+  3. **Débogage et génération de code** : j'ai utilisé Perplexity quand je bloquais sur des points précis. L'IA m'a aidé à corriger la syntaxe des graphiques Matplotlib, à générer le code de recherche des doublons cachés (j'avais la logique mais mon code ne marchait pas), à comprendre pourquoi les valeurs "inconnu" et "invalide" affichaient des NaN, à retrouver la formule de la méthode IQR et celle du calcul de la longueur des trous.
+
+- **Ce que j'ai écrit ou corrigé moi-même** : l'import des données, le chargement par chunks, l'analyse exploratoire, le formatage des dates, le typage des colonnes, la vérification des doublons, le filtrage des capteurs (notamment la suppression du capteur 70), les différents tests de redondance, ainsi qu'une grande partie de l'interprétation des résultats.
 
 ---
 
